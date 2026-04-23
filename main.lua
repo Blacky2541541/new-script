@@ -1801,12 +1801,213 @@ end
             }
         }
 
-        // Initialize the script executor
-        const scriptExecutor = new RobloxScriptExecutor();
+        // Roblox Lua Script Executor
+        console.log('Roblox GUI loaded successfully!');
         
-        // Debug: Check if system is initialized
-        console.log('Roblox Script Executor initialized!');
-        console.log('Available features:', Object.keys(scriptExecutor.enabledFeatures));
+        // Lua Scripts for Roblox
+        const luaScripts = {
+            fly: `
+-- Fly Script for Roblox
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+
+local flySpeed = 50
+local flying = false
+local flyPart
+
+local function createFlyPart()
+    if flyPart then flyPart:Destroy() end
+    flyPart = Instance.new("Part")
+    flyPart.Name = "FlyPart"
+    flyPart.Anchored = true
+    flyPart.CanCollide = false
+    flyPart.Transparency = 1
+    flyPart.Size = Vector3.new(2, 1, 1)
+    flyPart.Parent = workspace
+end
+
+local function startFly()
+    flying = true
+    createFlyPart()
+    
+    local connection
+    connection = game:GetService("RunService").Heartbeat:Connect(function()
+        if not flying then
+            connection:Disconnect()
+            return
+        end
+        
+        local moveVector = Vector3.new(0, 0, 0)
+        
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.W) then
+            moveVector = moveVector + rootPart.CFrame.LookVector
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.S) then
+            moveVector = moveVector - rootPart.CFrame.LookVector
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.A) then
+            moveVector = moveVector - rootPart.CFrame.RightVector
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.D) then
+            moveVector = moveVector + rootPart.CFrame.RightVector
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) then
+            moveVector = moveVector + Vector3.new(0, 1, 0)
+        end
+        if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftShift) then
+            moveVector = moveVector - Vector3.new(0, 1, 0)
+        end
+        
+        if moveVector.Magnitude > 0 then
+            moveVector = moveVector.Unit * flySpeed
+            rootPart.CFrame = rootPart.CFrame + moveVector * game:GetService("RunService").Heartbeat:Wait()
+        end
+        
+        flyPart.Position = rootPart.Position
+    end)
+end
+
+startFly()
+            `,
+            speed: `
+-- Speed Script for Roblox
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+humanoid.WalkSpeed = 32 -- 2x normal speed
+            `,
+            jumpPower: `
+-- Jump Power Script for Roblox
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+humanoid.JumpPower = 100
+            `,
+            noclip: `
+-- Noclip Script for Roblox
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+local connection
+connection = game:GetService("RunService").Stepped:Connect(function()
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.CanCollide then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+            `,
+            esp: `
+-- ESP Script for Roblox
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+
+local function createESP(player)
+    local character = player.Character
+    if not character then return end
+    
+    -- Remove existing ESP
+    for _, part in pairs(character:GetDescendants()) do
+        if part.Name == "ESPBox" then
+            part:Destroy()
+        end
+    end
+    
+    -- Create ESP box
+    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+    if humanoidRootPart then
+        local espBox = Instance.new("BoxHandleAdornment")
+        espBox.Name = "ESPBox"
+        espBox.Adornee = humanoidRootPart
+        espBox.Size = Vector3.new(4, 6, 2)
+        espBox.Color3 = player.TeamColor.Color
+        espBox.Transparency = 0.7
+        espBox.AlwaysOnTop = true
+        espBox.ZIndex = 10
+        espBox.Parent = humanoidRootPart
+        
+        -- Create name tag
+        local nameTag = Instance.new("BillboardGui")
+        nameTag.Name = "ESPName"
+        nameTag.Adornee = humanoidRootPart
+        nameTag.Size = UDim2.new(0, 100, 0, 50)
+        nameTag.StudsOffset = Vector3.new(0, 3, 0)
+        nameTag.Parent = humanoidRootPart
+        
+        local nameLabel = Instance.new("TextLabel")
+        nameLabel.Name = "NameLabel"
+        nameLabel.Size = UDim2.new(1, 0, 1, 0)
+        nameLabel.BackgroundTransparency = 1
+        nameLabel.Text = player.Name
+        nameLabel.TextColor3 = Color3.new(1, 1, 1)
+        nameLabel.TextStrokeTransparency = 0
+        nameLabel.TextScaled = true
+        nameLabel.Parent = nameTag
+    end
+end
+
+-- Create ESP for all players
+for _, player in pairs(players:GetPlayers()) do
+    if player ~= localPlayer then
+        createESP(player)
+    end
+end
+            `
+        };
+
+        // Execute Lua script function
+        function executeLuaScript(scriptName, enabled) {
+            const script = luaScripts[scriptName];
+            if (script) {
+                console.log(`Executing ${scriptName} script:`, enabled);
+                console.log('Lua Script:', script);
+                
+                // In a real Roblox environment, this would execute the script
+                // For now, we just log it to console
+                if (window.RobloxExecutor) {
+                    window.RobloxExecutor.execute(script);
+                } else {
+                    console.log('Script ready for Roblox execution');
+                }
+            }
+        }
+
+        // Setup toggle functionality with Lua scripts
+        document.querySelectorAll('.feature-card').forEach(card => {
+            const title = card.querySelector('.feature-title');
+            const toggle = card.querySelector('.toggle-switch');
+            
+            if (title && toggle) {
+                toggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    const isActive = this.classList.contains('active');
+                    console.log(`${title.textContent} ${isActive ? 'enabled' : 'disabled'}`);
+                    
+                    // Execute corresponding Lua script
+                    switch(title.textContent) {
+                        case 'Fly':
+                            executeLuaScript('fly', isActive);
+                            break;
+                        case 'Speed':
+                            executeLuaScript('speed', isActive);
+                            break;
+                        case 'Jump Power':
+                            executeLuaScript('jumpPower', isActive);
+                            break;
+                        case 'Noclip':
+                            executeLuaScript('noclip', isActive);
+                            break;
+                        case 'ESP':
+                            executeLuaScript('esp', isActive);
+                            break;
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
